@@ -35,3 +35,6 @@ Thumbs.db
 npm-debug.log*
 
 # OSCE
+
+# Model files (download from private release)
+backend/model/*.h5
