@@ -88,9 +88,8 @@ const Login: React.FC = () => {
       } else {
         setError(data.message || 'Username atau password salah');
       }
-    } catch (err) {
+    } catch {
       setError('Terjadi kesalahan saat login. Silakan coba lagi.');
-      console.error('Login error:', err);
     } finally {
       setIsLoading(false);
     }

@@ -30,10 +30,7 @@ export const useAuth = () => {
       const response = await fetch('/api/auth/check', {
         method: 'GET',
         credentials: 'include',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Accept': 'application/json' },
       });
 
       if (response.ok) {
@@ -48,14 +45,6 @@ export const useAuth = () => {
           localStorage.setItem('user', JSON.stringify(data.user));
           return true;
         }
-      } else {
-        setAuthState({
-          user: null,
-          isAuthenticated: false,
-          isLoading: false
-        });
-        localStorage.removeItem('user');
-        return false;
       }
 
       setAuthState({

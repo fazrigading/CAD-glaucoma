@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { apiFetch, ApiError } from '../utils/api';
 import CorrectionNavbar from '../components/correction/CorrectionNavbar';
 import CorrectionAccount from '../components/correction/CorrectionAccount';
 import CorrectionResult from '../components/correction/CorrectionResult';
@@ -117,40 +118,26 @@ function Correction() {
     }
   }, [searchParams]);
 
-  // Fungsi untuk mengambil data pasien dari database
   const fetchPatientData = async (patientId: number) => {
     try {
-      const response = await fetch(`/api/history/${patientId}`, {
-        method: 'GET'
-      });
-
-      if (response.status === 401) {
-        // Session expired, arahkan ke login
-        navigate('/login', {
-          state: { from: { pathname: '/correction' } },
-          replace: true
-        });
-        return;
-      }
-
-      const result = await response.json();
+      const result = await apiFetch<{ success: boolean; message: string; data: unknown }>(`/api/history/${patientId}`);
 
       if (result.success && result.data) {
-        const patientData = result.data;
+        const patientData = result.data as Record<string, unknown>;
 
         const formattedData: ResponseData = {
-          nama: patientData.patient_name,
-          umur: patientData.age.toString(),
-          gender: patientData.gender,
-          posisi: patientData.eyes_position,
-          gambar_url: `/api/uploads/${patientData.raw_img_path.replace(/^uploads\//, '')}`,
-          mask_url: `/api/uploads/${patientData.mask_img_path.replace(/^uploads\//, '')}`,
-          draw_url: `/api/uploads/${patientData.annot_img_path.replace(/^uploads\//, '')}`,
+          nama: patientData.patient_name as string,
+          umur: String(patientData.age),
+          gender: patientData.gender as string,
+          posisi: patientData.eyes_position as string,
+          gambar_url: `/api/uploads/${(patientData.raw_img_path as string).replace(/^uploads\//, '')}`,
+          mask_url: `/api/uploads/${(patientData.mask_img_path as string).replace(/^uploads\//, '')}`,
+          draw_url: `/api/uploads/${(patientData.annot_img_path as string).replace(/^uploads\//, '')}`,
           html_content: '',
-          v_cdr: patientData.v_cdr.toString(),
-          h_cdr: patientData.h_cdr.toString(),
-          area_cdr: patientData.area_cdr.toString(),
-          diagnose: patientData.diagnose,
+          v_cdr: String(patientData.v_cdr),
+          h_cdr: String(patientData.h_cdr),
+          area_cdr: String(patientData.area_cdr),
+          diagnose: patientData.diagnose as string,
         };
 
         setResultData(formattedData);
@@ -158,41 +145,25 @@ function Correction() {
         setOriginalImageUrl(formattedData.gambar_url);
         fetchPolygonData(patientId);
       } else {
-        console.error('Gagal mengambil data pasien:', result.message);
         alert('Gagal mengambil data pasien dari database.');
         setResultData(dummyResult);
       }
-    } catch (error) {
-      console.error('Error fetching patient data:', error);
+    } catch {
       alert('Terjadi error saat mengambil data pasien.');
       setResultData(dummyResult);
     }
   };
 
-  // Fungsi untuk mengambil data polygon dari database
   const fetchPolygonData = async (patientId: number) => {
     try {
-      const response = await fetch(`/api/get-polygon/${patientId}`, {
-        method: 'GET'
-      });
-
-      if (response.status === 401) {
-        // Session expired, arahkan ke login
-        navigate('/login', {
-          state: { from: { pathname: '/correction' } },
-          replace: true
-        });
-        return;
-      }
-
-      const result = await response.json();
+      const result = await apiFetch<{ success: boolean; data: unknown }>(`/api/get-polygon/${patientId}`);
 
       if (result.success && result.data) {
-        const polygonData = result.data;
+        const polygonData = result.data as Record<string, unknown>;
         const loadedPolygons: Polygon[] = [];
 
         if (polygonData.disc_polygons && Array.isArray(polygonData.disc_polygons)) {
-          polygonData.disc_polygons.forEach((discPolygon: { id?: string; points?: Array<{ x: number; y: number }> }, index: number) => {
+          (polygonData.disc_polygons as Array<{ id?: string; points?: Array<{ x: number; y: number }> }>).forEach((discPolygon, index) => {
             if (discPolygon && Array.isArray(discPolygon.points) && discPolygon.points.length > 0) {
               loadedPolygons.push({
                 id: discPolygon.id || `disc_${Date.now()}_${index}`,
@@ -206,7 +177,7 @@ function Correction() {
               loadedPolygons.push({
                 id: `disc_${Date.now()}_${index}`,
                 label: 'disc',
-                points: discPolygon.map((point: { x: number; y: number }) => ({
+                points: (discPolygon as Array<{ x: number; y: number }>).map((point: { x: number; y: number }) => ({
                   x: Number(point.x) || 0,
                   y: Number(point.y) || 0
                 }))
@@ -216,7 +187,7 @@ function Correction() {
         }
 
         if (polygonData.cup_polygons && Array.isArray(polygonData.cup_polygons)) {
-          polygonData.cup_polygons.forEach((cupPolygon: { id?: string; points?: Array<{ x: number; y: number }> }, index: number) => {
+          (polygonData.cup_polygons as Array<{ id?: string; points?: Array<{ x: number; y: number }> }>).forEach((cupPolygon, index) => {
             if (cupPolygon && Array.isArray(cupPolygon.points) && cupPolygon.points.length > 0) {
               loadedPolygons.push({
                 id: cupPolygon.id || `cup_${Date.now()}_${index}`,
@@ -230,7 +201,7 @@ function Correction() {
               loadedPolygons.push({
                 id: `cup_${Date.now()}_${index}`,
                 label: 'cup',
-                points: cupPolygon.map((point: { x: number; y: number }) => ({
+                points: (cupPolygon as Array<{ x: number; y: number }>).map((point: { x: number; y: number }) => ({
                   x: Number(point.x) || 0,
                   y: Number(point.y) || 0
                 }))
@@ -322,25 +293,10 @@ function Correction() {
         }
       }
 
-      const response = await fetch(`/api/save-polygon/${patientId}`, {
+      const result = await apiFetch<{ success: boolean; message: string; doctor_name?: string }>(`/api/save-polygon/${patientId}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(polygonData)
+        body: JSON.stringify(polygonData),
       });
-
-      if (response.status === 401) {
-        // Session expired, arahkan ke login
-        alert('Sesi Anda telah berakhir. Silakan login kembali.');
-        navigate('/login', {
-          state: { from: { pathname: '/correction' } },
-          replace: true
-        });
-        return;
-      }
-
-      const result = await response.json();
 
       if (result.success) {
         if (vCdrValue !== null && hCdrValue !== null && areaCdrValue !== null) {
@@ -353,8 +309,11 @@ function Correction() {
         alert(`Gagal menyimpan polygon: ${result.message}`);
       }
     } catch (error) {
-      console.error('Error saving polygons:', error);
-      alert('Terjadi error saat menyimpan polygon.');
+      if (error instanceof ApiError) {
+        alert(`Gagal menyimpan polygon: ${error.message}`);
+      } else {
+        alert('Terjadi error saat menyimpan polygon.');
+      }
     }
   };
 
