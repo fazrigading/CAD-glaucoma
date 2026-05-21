@@ -1,36 +1,32 @@
-# CAD-Glaucoma
+# Computer-Aided Detection System for Glaucoma Diagnosis
 
 A Computer-Aided Detection (CAD) system for glaucoma diagnosis based on optic nerve head analysis in fundus images. This research project uses a U-Net deep learning model to segment the optic disc and cup, calculate the Cup-to-Disc Ratio (CDR), and assist ophthalmologists in glaucoma detection.
 
-## License
-
-This project is licensed under the [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](LICENSE).
-
-**You are free to:**
-- **Share** — copy and redistribute the material in any medium or format
-
-**Under the following terms:**
-- **Attribution** — You must give appropriate credit, provide a link to the license, and indicate if changes were made.
-- **NonCommercial** — You may not use the material for commercial purposes.
-- **NoDerivatives** — If you remix, transform, or build upon the material, you may not distribute the modified material.
-
 ## Research Team
 
-**Investigators:** 
-- Prof. Dr. Ir. Anindita Septiarini, S.T., M.Cs., IPU. (Project Leader)
-- Prof. Dr. Ir. Hamdani, S.T., M.Cs., IPM. (Co-Investigator, Funding Acquisition)
-- dr. Nur Khoma Fatmawati, Sp.M. (Ophtalmologist, Project Partner from SMEC)
-- Imam Muhammad Hakim, S.T., M.T. (Back-end Developer)
-- Fazri Rahmad Nor Gading, S.Kom. (Front-end Developer)
+- **Prof. Dr. Ir. Anindita Septiarini, S.T., M.Cs., IPU.** - Project Leader
+  - Writing – Original Draft, Conceptualization, Investigation, Methodology, Resources
+- **Prof. Dr. Ir. Hamdani, S.T., M.Cs., IPM.** - Co-Investigator
+  - Writing – Review & Editing, Funding Acquisition, Resources, Supervision, Validation
+- **dr. Nur Khoma Fatmawati, Sp.M.** - Co-Investigator (Ophtalmologist, Project Partner from SMEC)
+  - Formal Analysis, Supervision, Resources, Methodology, Validation 
+- **Imam Muhammad Hakim, S.T., M.T.** - Back-end Developer & AI Engineer
+   - Writing – Review & Editing, Data Curation, Methodology, Software, Investigation
+- **Fazri Rahmad Nor Gading, S.Kom.** - Front-end Developer
+    - Writing – Review & Editing, Project Administration, Investigation, Software, Visualization
 
 **Previous Developers:**
-- Bugi Sulistiyo, S.Kom. (Back-end Developer)
-- Eko Rahmat Darmawan, S.Kom. (Front-end Developer)
+- Bugi Sulistiyo, S.Kom.
+  - Back-end Developer & AI Engineer:
+    - Data Curation, Investigation, Methodology, Software 
+- Eko Rahmat Darmawan, S.Kom.
+  - Front-end Developer:
+    - Investigation, Software, Visualization
 
 **Supported by:** 
-- Kemendikbud Ristekdikti 
-- Universitas Mulawarman
-- Klinik SMEC Samarinda
+- Ministry of Higher Education, Science, and Technology of Indonesia _(Kemendikbud Ristekdikti)_
+- Mulawarman University _(Universitas Mulawarman)_
+- Sabang Merauke Eye Center (SMEC) Samarinda _(RS Mata SMEC)_
 
 ## Architecture
 
@@ -165,3 +161,16 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contributor setup instructions, inclu
 - Session cookies use `HttpOnly` and `SameSite=Lax`
 - File uploads are validated for type (`.jpg`, `.jpeg`, `.png` only)
 - Path traversal protection on `/uploads/<path>` endpoints
+
+
+## License
+
+This project is licensed under the [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](LICENSE).
+
+**You are free to:**
+- **Share** — copy and redistribute the material in any medium or format
+
+**Under the following terms:**
+- **Attribution** — You must give appropriate credit, provide a link to the license, and indicate if changes were made.
+- **NonCommercial** — You may not use the material for commercial purposes.
+- **NoDerivatives** — If you remix, transform, or build upon the material, you may not distribute the modified material.
