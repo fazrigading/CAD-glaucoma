@@ -108,6 +108,10 @@ npm run dev
 
 Frontend runs on `http://localhost:5173` and proxies `/api` to the backend.
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contributor setup instructions, including how to download the required model files.
+
 ## Project Structure
 
 ### Backend Routes
