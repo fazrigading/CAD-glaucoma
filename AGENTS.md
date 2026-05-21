@@ -26,13 +26,29 @@ cd frontend && npm run build
 cd frontend && npm run lint
 ```
 
+## Docker Commands
+```bash
+# Start all services (db, backend, frontend)
+make up
+# or: docker compose up -d
+
+# Stop all services
+make down
+# or: docker compose down
+
+# Rebuild and start
+docker compose up -d --build
+
+# Services: frontend on :80, backend on :5000, db on :3306
+```
+
 ## Setup
 - **Backend venv**: `cd backend && python -m venv .venv-linux && source .venv-linux/bin/activate && pip install -r requirements.txt`
   - Requires Python 3.12+ (TensorFlow 2.21.0). Windows: use `.venv-win/`.
 - **Frontend**: `cd frontend && npm install`
 - **Database**: Import `database/cad_glaucoma_app.sql` into MySQL/MariaDB.
 - **Model files**: `backend/model/unet_model_aug.h5` (primary) and `unet_model_ori.h5` — must exist for predictions to work.
-- **Environment**: Copy `backend/.env.example` to `backend/.env` and set `FLASK_SECRET_KEY`.
+- **Environment**: Copy `.env.example` to `.env` at project root, or `backend/.env.example` to `backend/.env` for local dev. Set `FLASK_SECRET_KEY`.
 
 ## Key Paths
 - `backend/app/__init__.py` — `create_app()` factory, registers all blueprints
