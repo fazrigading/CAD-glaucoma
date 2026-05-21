@@ -10,11 +10,11 @@ function Hero() {
         </p>
         <p className="text-subheading py-2">Tim Peneliti</p>
         <ul className="text-paragraph font-normal">
-            <li>Prof. Dr. Ir. Anindita Septiarini, S.T., M.Cs.</li>
-            <li>Prof. Dr. Ir. Hamdani, S.T., M.Cs., IPM</li>
-            <li>dr. Nur Khomah Fatmawati, Sp. M</li >
-            <li>Bugi Sulistiyo, S.Kom</li>
-            <li>Eko Rahmat Darmawan, S.Kom</li>
+            <li>Prof. Dr. Ir. Anindita Septiarini, S.T., M.Cs., IPU.</li>
+            <li>Prof. Dr. Ir. Hamdani, S.T., M.Cs., IPM.</li>
+            <li>dr. Nur Khoma Fatmawati, Sp.M</li >
+            <li>Imam Muhammad Hakim, S.T., M.T.</li>
+            <li>Fazri Rahmad Nor Gading, S.Kom.</li>
         </ul>
         <a
             href="/model"
