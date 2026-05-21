@@ -1,0 +1,9 @@
+uploads/annot/*
+uploads/raw/*
+uploads/mask/*
+.venv/
+.venv-win/
+.venv-linux/
+__pycache__/
+*.pyc
+.env
