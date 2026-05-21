@@ -7,6 +7,7 @@ from app.routes.upload import upload_bp
 from app.routes.history import history_bp
 from app.routes.polygon import polygon_bp
 from app.routes.static import static_bp
+from app.routes.health import health_bp
 
 
 def create_app(config_class=None):
@@ -32,5 +33,6 @@ def create_app(config_class=None):
     app.register_blueprint(history_bp)
     app.register_blueprint(polygon_bp)
     app.register_blueprint(static_bp)
+    app.register_blueprint(health_bp)
 
     return app

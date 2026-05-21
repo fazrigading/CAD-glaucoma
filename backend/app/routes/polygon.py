@@ -19,7 +19,8 @@ def update_polygon_data(patient_id, polygon_data, doctor_id=None):
 
         if calculated_cdr:
             v_cdr_value = calculated_cdr.get("v_cdr")
-            diagnose = "Glaucoma" if v_cdr_value and v_cdr_value > 0.5 else "Non Glaucoma"
+            threshold = current_app.config.get("CDR_THRESHOLD", 0.5)
+            diagnose = "Glaucoma" if v_cdr_value and v_cdr_value > threshold else "Non Glaucoma"
             update_query = """
                 UPDATE predict
                 SET disc_class = %s, cup_class = %s, v_cdr = %s, h_cdr = %s, area_cdr = %s, diagnose = %s, doctor_id = %s
@@ -122,7 +123,8 @@ def save_polygon(patient_id):
         if success:
             if "calculated_cdr" in data:
                 v_cdr_value = data["calculated_cdr"].get("v_cdr")
-                diagnose = "Glaucoma" if v_cdr_value and v_cdr_value > 0.5 else "Non Glaucoma"
+                threshold = current_app.config.get("CDR_THRESHOLD", 0.5)
+                diagnose = "Glaucoma" if v_cdr_value and v_cdr_value > threshold else "Non Glaucoma"
                 message = f"Polygon data, CDR, dan diagnosa ({diagnose}) berhasil disimpan oleh {doctor_name}"
             else:
                 message = f"Polygon data berhasil disimpan oleh {doctor_name}"
