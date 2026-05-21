@@ -10,7 +10,7 @@ from app.routes.static import static_bp
 
 
 def create_app(config_class=None):
-    frontend_dist = os.path.join(os.path.dirname(os.path.dirname(__file__)), "..", "client", "dist")
+    frontend_dist = os.path.join(os.path.dirname(os.path.dirname(__file__)), "..", "frontend", "dist")
 
     app = Flask(__name__, static_folder=frontend_dist, static_url_path="/")
 

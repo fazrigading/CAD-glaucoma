@@ -13,7 +13,7 @@ dist/
 venv/
 
 # Build outputs
-client/dist/
+frontend/dist/
 
 # IDE
 .vscode/

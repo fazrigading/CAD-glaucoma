@@ -1,0 +1,19 @@
+{
+    "content 1": {
+      "title": "Deskripsi Singkat",
+      "contents": "Karya ini bertujuan mengatasi tantangan dalam deteksi dini glaukoma. Glaukoma adalah penyakit yang sering kali tidak menunjukkan gejala hingga mencapai tahap lanjut dan memerlukan peralatan khusus serta dokter mata yang berpengalaman untuk mendiagnosisnya. Solusi yang diusulkan adalah model computer vision berbasis semantic segmentation yang menganalisis citra fundus mata dan menghitung rasio Cup-to-Disc Ratio (CDR) berdasarkan area, vertikal, dan horizontal dari bagian cup dan disc. Model ini dikembangkan menggunakan citra fundus dari populasi Indonesia dan dirancang untuk diakses melalui platform website. Hal ini dilakukan dengan tujuan mempermudah fasilitas kesehatan yang tidak memiliki atau kekurangan dokter mata berpengalaman dalam diagnosis glaukoma secara akurat."
+    },
+    "content 2": {
+      "title": "Dataset",
+      "contents": "Dataset yang digunakan adalah dataset private yang diambil di dalah satu rumah sakit di Yogyakarta, terdiri dari 419 gambar fundus dengan 197 gambar non-glaukoma dan 222 gambar glaukoma, berasal dari 91 pasien dengan 41 non-glaukoma dan 50 glaukoma. Dataset dibagi dengan rasio 70:10:20 untuk training, validation, dan testing."
+    },
+    "content 3": {
+      "title": "Metode",
+      "contents": "Model arsitektur yang digunakan adalah U-Net karena kemampuan yang unggul dalam segmentasi citra medis, terutama dengan mekanisme skip connection yang memungkinkan pemulihan detail spasial secara efektif. Hal ini penting untuk mendeteksi struktur cup dan disc pada gambar fundus. Selain itu, beberapa arsitektur transfer learning juga akan digunakan untuk meningkatkan performa model. Preprocessing melibatkan penggunaan CLAHE (Contrast Limited Adaptive Histogram Equalization) untuk meningkatkan kontras, serta normalisasi. Gambar OCT digunakan sebagai acuan dalam segmentasi, dan citra mask dari anotasi dibuat sebagai target output. Model dilatih menggunakan optimizer Adam dan 10 epoch, menggunakan parameter umum yang stabil. Model dievaluasi menggunakan metrik seperti Accuracy, F1-Score, dan AUC untuk memberikan penilaian yang komprehensif terhadap kinerjanya. Hasil evaluasi menunjukkan kemampuan model dalam mendeteksi dan mengklasifikasikan glaukoma dengan akurasi tinggi."
+    },
+    "content 4": {
+      "title": "Luaran",
+      "contents": "Hasil yang diperoleh menunjukkan bahwa model mencapai akurasi sebesar 98% pada data tanpa augmentasi maupun dengan augmentasi. Metrik loss juga menunjukkan perbaikan signifikan setelah augmentasi dilakukan, dengan nilai loss awal sebesar 0.057 untuk data tanpa augmentasi, yang kemudian turun menjadi 0.041 setelah augmentasi diterapkan. Hal ini menunjukkan bahwa augmentasi data membantu model dalam memperbaiki prediksi dan generalisasi terhadap dataset. Meskipun saat ini metrik lain belum ditampilkan, hasil akurasi dan loss sudah memberikan gambaran awal bahwa model mampu melakukan segmentasi dengan performa yang cukup baik."
+    }
+  }
+  
