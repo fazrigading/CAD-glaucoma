@@ -1,5 +1,6 @@
 import json
-from flask import Blueprint, current_app
+import os
+from flask import Blueprint, current_app, jsonify, request
 from app.db import get_db_connection
 
 history_bp = Blueprint("history", __name__)
@@ -197,28 +198,44 @@ def delete_prediction(prediction_id):
 
 @history_bp.route("/api/history", methods=["GET"])
 def get_prediction_history():
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 20, type=int)
+    per_page = min(per_page, 100)
+
     try:
         predictions = get_all_predictions()
-        if predictions is not None:
-            return jsonify({
-                "success": True,
-                "message": "Data history berhasil diambil",
-                "data": predictions,
-                "total": len(predictions),
-            }), 200
-        else:
+        if predictions is None:
             return jsonify({
                 "success": False,
                 "message": "Gagal mengambil data history",
                 "data": [],
                 "total": 0,
+                "page": page,
+                "per_page": per_page,
             }), 500
+
+        total = len(predictions)
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated = predictions[start:end]
+
+        return jsonify({
+            "success": True,
+            "message": "Data history berhasil diambil",
+            "data": paginated,
+            "total": total,
+            "page": page,
+            "per_page": per_page,
+            "total_pages": (total + per_page - 1) // per_page,
+        }), 200
     except Exception as e:
         return jsonify({
             "success": False,
             "message": f"Error: {str(e)}",
             "data": [],
             "total": 0,
+            "page": page,
+            "per_page": per_page,
         }), 500
 
 
@@ -249,8 +266,25 @@ def get_prediction_detail(prediction_id):
 @history_bp.route("/api/history/<int:prediction_id>", methods=["DELETE"])
 def delete_prediction_data(prediction_id):
     try:
+        prediction = get_prediction_by_id(prediction_id)
+        if not prediction:
+            return jsonify({
+                "success": False,
+                "message": "Data tidak ditemukan",
+            }), 404
+
         success = delete_prediction(prediction_id)
         if success:
+            for path_key in ["raw_img_path", "mask_img_path", "annot_img_path"]:
+                file_path = prediction.get(path_key)
+                if file_path:
+                    clean_path = file_path.replace("\\", "/")
+                    full_path = os.path.join(current_app.config["UPLOAD_FOLDER"], clean_path)
+                    real_path = os.path.realpath(full_path)
+                    real_upload = os.path.realpath(current_app.config["UPLOAD_FOLDER"])
+                    if real_path.startswith(real_upload) and os.path.exists(real_path):
+                        os.remove(real_path)
+
             return jsonify({
                 "success": True,
                 "message": f"Data prediksi dengan ID {prediction_id} berhasil dihapus",

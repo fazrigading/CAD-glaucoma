@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { apiFetch, ApiError } from '../utils/api';
 import Footers from '../components/general/footer';
 import Navbar from '../components/general/navbar';
 import Logo from '../components/overview/logo';
-import type { PredictionHistory } from '../interfaces/InterfaceModel';
-import type { HistoryResponse } from '../interfaces/InterfaceModel';
+import type { PredictionHistory, HistoryResponse } from '../interfaces/InterfaceModel';
 
 const History: React.FC = () => {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -14,6 +14,10 @@ const History: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState<number | null>(null);
   const [imageErrors, setImageErrors] = useState<{ [key: string]: boolean }>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,31 +30,26 @@ const History: React.FC = () => {
     }
   }, [authLoading, isAuthenticated, navigate]);
 
-  const fetchPredictionHistory = async () => {
+  const fetchPredictionHistory = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await fetch('/api/history');
-
-      if (response.status === 401) {
-        // Session expired, redirect to login (should not happen with dummy login)
-        navigate('/login', {
-          state: { from: { pathname: '/history' } },
-          replace: true
-        });
-        return;
-      }
-
-      const data: HistoryResponse = await response.json();
+      const data = await apiFetch<HistoryResponse>(`/api/history?page=${page}&per_page=${perPage}`);
 
       if (data.success) {
         setPredictions(data.data);
+        setCurrentPage(data.page || 1);
+        setTotalPages(data.total_pages || 1);
+        setTotalItems(data.total || 0);
         setError(null);
       } else {
         setError(data.message);
       }
     } catch (err) {
-      setError('Gagal mengambil data history');
-      console.error('Error fetching history:', err);
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError('Gagal mengambil data history');
+      }
     } finally {
       setLoading(false);
     }
@@ -85,20 +84,9 @@ const History: React.FC = () => {
 
     try {
       setDeleteLoading(id);
-      const response = await fetch(`/api/history/${id}`, {
-        method: 'DELETE'
+      const data = await apiFetch<{ success: boolean; message: string }>(`/api/history/${id}`, {
+        method: 'DELETE',
       });
-
-      if (response.status === 401) {
-        alert('Sesi Anda telah berakhir. Silakan login kembali.');
-        navigate('/login', {
-          state: { from: { pathname: '/history' } },
-          replace: true
-        });
-        return;
-      }
-
-      const data = await response.json();
 
       if (data.success) {
         setPredictions(prev => prev.filter(prediction => prediction.id !== id));
@@ -107,8 +95,11 @@ const History: React.FC = () => {
         alert(`Gagal menghapus data: ${data.message}`);
       }
     } catch (err) {
-      console.error('Error deleting prediction:', err);
-      alert('Terjadi kesalahan saat menghapus data');
+      if (err instanceof ApiError) {
+        alert(`Gagal menghapus data: ${err.message}`);
+      } else {
+        alert('Terjadi kesalahan saat menghapus data');
+      }
     } finally {
       setDeleteLoading(null);
     }
@@ -164,7 +155,6 @@ const History: React.FC = () => {
   if (loading) {
     return (
       <>
-        {/* Header */}
         <div className="w-full py-5">
           <div className="flex justify-center ps-12 py-2 gap-3">
             <Logo imgWidth={60} imgHeight={60} />
@@ -185,7 +175,6 @@ const History: React.FC = () => {
   if (error) {
     return (
       <>
-        {/* Header */}
         <div className="w-full py-5">
           <div className="flex justify-center ps-12 py-2 gap-3">
             <Logo imgWidth={60} imgHeight={60} />
@@ -208,7 +197,6 @@ const History: React.FC = () => {
 
   return (
     <>
-      {/* Header */}
       <div className="w-full py-5">
         <div className="flex gap-25 items-center">
           <div className="flex justify-center ps-12 py-2 gap-3">
@@ -219,7 +207,6 @@ const History: React.FC = () => {
         <Navbar />
       </div>
 
-      {/* Main Content */}
       <div className="w-full py-5 bg-slate-200">
         <div className="container mx-auto px-4 py-8">
           <div className="bg-white rounded-lg shadow-lg">
@@ -236,52 +223,26 @@ const History: React.FC = () => {
               ) : (
                 <>
                   <div className="mb-4">
-                    <p className="text-gray-600">Total: {predictions.length} data prediksi</p>
+                    <p className="text-gray-600">Total: {totalItems} data prediksi</p>
                   </div>
 
                   <div className="overflow-x-auto">
                     <table className="min-w-full bg-white border border-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            ID
-                          </th>
-                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Nama Pasien
-                          </th>
-                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Umur
-                          </th>
-                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Jenis Kelamin
-                          </th>
-                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Posisi Mata
-                          </th>
-                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Gambar Raw
-                          </th>
-                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Gambar Annot
-                          </th>
-                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            H-CDR
-                          </th>
-                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            V-CDR
-                          </th>
-                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Area CDR
-                          </th>
-                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Diagnosa
-                          </th>
-                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Tanggal
-                          </th>
-                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Aksi
-                          </th>
+                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Pasien</th>
+                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Umur</th>
+                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis Kelamin</th>
+                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Posisi Mata</th>
+                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gambar Raw</th>
+                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gambar Annot</th>
+                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">H-CDR</th>
+                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">V-CDR</th>
+                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Area CDR</th>
+                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Diagnosa</th>
+                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                          <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
@@ -293,21 +254,11 @@ const History: React.FC = () => {
 
                           return (
                             <tr key={prediction.id} className="hover:bg-gray-50">
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                {prediction.id}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {prediction.patient_name}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {prediction.age} tahun
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {prediction.gender}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {prediction.eyes_position}
-                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{prediction.id}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{prediction.patient_name}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{prediction.age} tahun</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{prediction.gender}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{prediction.eyes_position}</td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 {rawImageUrl && !imageErrors[rawImageKey] ? (
                                   <img
@@ -340,23 +291,15 @@ const History: React.FC = () => {
                                   </div>
                                 )}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {prediction.h_cdr.toFixed(2)}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {prediction.v_cdr.toFixed(2)}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {prediction.area_cdr.toFixed(2)}
-                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{prediction.h_cdr.toFixed(2)}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{prediction.v_cdr.toFixed(2)}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{prediction.area_cdr.toFixed(2)}</td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getDiagnoseColor(prediction.diagnose)}`}>
                                   {prediction.diagnose}
                                 </span>
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {formatDate(prediction.created_time)}
-                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatDate(prediction.created_time)}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div className="flex gap-2">
                                   <button
@@ -382,11 +325,9 @@ const History: React.FC = () => {
                                         Hapus...
                                       </>
                                     ) : (
-                                      <>
-                                        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                      </>
+                                      <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                      </svg>
                                     )}
                                   </button>
                                 </div>
@@ -397,6 +338,28 @@ const History: React.FC = () => {
                       </tbody>
                     </table>
                   </div>
+
+                  {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-4 mt-6">
+                      <button
+                        onClick={() => fetchPredictionHistory(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="btn btn-sm btn-outline disabled:opacity-50"
+                      >
+                        Previous
+                      </button>
+                      <span className="text-sm text-gray-600">
+                        Page {currentPage} of {totalPages} ({totalItems} items)
+                      </span>
+                      <button
+                        onClick={() => fetchPredictionHistory(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="btn btn-sm btn-outline disabled:opacity-50"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -404,7 +367,6 @@ const History: React.FC = () => {
         </div>
       </div>
 
-      {/* Footer */}
       <Footers />
     </>
   );

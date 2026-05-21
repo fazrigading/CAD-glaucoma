@@ -43,6 +43,9 @@ export interface HistoryResponse {
   message: string;
   data: PredictionHistory[];
   total: number;
+  page?: number;
+  per_page?: number;
+  total_pages?: number;
 }
 
 export interface PredictionDetailResponse {
