@@ -16,15 +16,21 @@ This project is licensed under the [Creative Commons Attribution-NonCommercial-N
 
 ## Research Team
 
-**Principal Investigator:** Prof. Dr. Anindita Septiarini, S.T., M.Cs.
+**Investigators:** 
+- Prof. Dr. Ir. Anindita Septiarini, S.T., M.Cs., IPU. (Project Leader)
+- Prof. Dr. Ir. Hamdani, S.T., M.Cs., IPM. (Co-Investigator, Funding Acquisition)
+- dr. Nur Khoma Fatmawati, Sp.M. (Ophtalmologist, Project Partner from SMEC)
+- Imam Muhammad Hakim, S.T., M.T. (Back-end Developer)
+- Fazri Rahmad Nor Gading, S.Kom. (Front-end Developer)
 
-**Co-Investigators:**
-- Prof. Dr. Ir. Hamdani, S.T., M.Cs., IPM
-- dr. Nur Khomah Fatmawati, Sp. M
-- Bugi Sulistiyo, S.Kom
-- Eko Rahmat Darmawan, S.Kom
+**Previous Developers:**
+- Bugi Sulistiyo, S.Kom. (Back-end Developer)
+- Eko Rahmat Darmawan, S.Kom. (Front-end Developer)
 
-**Supported by:** Kemendikbud Ristek and Universitas Mulawarman
+**Supported by:** 
+- Kemendikbud Ristekdikti 
+- Universitas Mulawarman
+- Klinik SMEC Samarinda
 
 ## Architecture
 
