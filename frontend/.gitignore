@@ -11,11 +11,6 @@ node_modules
 dist
 dist-ssr
 *.local
-backend/__pycache__/
-backend/uploads/
-backend/model/
-backend/venv/
-backend/.flaskenv
 
 # Editor directories and files
 .vscode/*

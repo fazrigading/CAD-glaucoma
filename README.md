@@ -81,11 +81,10 @@ sudo mysql -u root glaucoma_db < database/cad_glaucoma_app.sql
 
 ```bash
 cd backend
+python -m venv .venv 
 
-# Linux
-python -m venv .venv-linux && source .venv-linux/bin/activate
-# Windows
-python -m venv .venv-win && .venv-win\Scripts\activate
+source .venv-linux/bin/activate # Linux
+.venv\Scripts\activate # Windows
 
 pip install -r requirements.txt
 cp .env.example .env   # Edit FLASK_SECRET_KEY

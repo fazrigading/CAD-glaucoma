@@ -12,12 +12,10 @@
 cd frontend && npm run dev
 
 # Backend (port 5000) — must run from backend/ dir
-cd backend && source .venv-linux/bin/activate && flask run   # Linux
-cd backend && .venv-win/Scripts/flask run                     # Windows
+cd backend && source .venv/bin/activate && flask run
 
 # Alternative: run backend directly
-cd backend && source .venv-linux/bin/activate && python run.py  # Linux
-cd backend && .venv-win/Scripts/python run.py                   # Windows
+cd backend && source .venv/bin/activate && python run.py
 
 # Frontend build (outputs to frontend/dist/)
 cd frontend && npm run build
@@ -44,7 +42,7 @@ docker compose up -d --build
 
 ## Setup
 - **Backend venv**: `cd backend && python -m venv .venv-linux && source .venv-linux/bin/activate && pip install -r requirements.txt`
-  - Requires Python 3.12+ (TensorFlow 2.21.0). Windows: use `.venv-win/`.
+  - Requires Python 3.12+ (TensorFlow 2.21.0).
 - **Frontend**: `cd frontend && npm install`
 - **Database**: Import `database/cad_glaucoma_app.sql` into MySQL/MariaDB.
 - **Model files**: `backend/model/unet_model_aug.h5` (primary) and `unet_model_ori.h5` — must exist for predictions to work.
@@ -73,4 +71,3 @@ docker compose up -d --build
 - **Temp file cleanup** — `clean_temp_files()` only deletes files starting with `temp_`, not persisted patient images.
 - **Path traversal protection** — `/uploads/<path>` validates filename doesn't escape upload directory.
 - **File type validation** — only `.jpg`, `.jpeg`, `.png` accepted on upload.
-- **Venv directories** — `.venv-linux/` (Linux) and `.venv-win/` (Windows) are gitignored.
