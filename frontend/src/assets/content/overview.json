@@ -13,7 +13,7 @@
     },
     "content 4": {
       "title": "Luaran",
-      "contents": "Hasil yang diperoleh menunjukkan bahwa model mencapai akurasi sebesar 98% pada data tanpa augmentasi maupun dengan augmentasi. Metrik loss juga menunjukkan perbaikan signifikan setelah augmentasi dilakukan, dengan nilai loss awal sebesar 0.057 untuk data tanpa augmentasi, yang kemudian turun menjadi 0.041 setelah augmentasi diterapkan. Hal ini menunjukkan bahwa augmentasi data membantu model dalam memperbaiki prediksi dan generalisasi terhadap dataset. Meskipun saat ini metrik lain belum ditampilkan, hasil akurasi dan loss sudah memberikan gambaran awal bahwa model mampu melakukan segmentasi dengan performa yang cukup baik."
+      "contents": "Hasil eksperimen yang diperoleh model mencapai akurasi 98% pada data tanpa augmentasi maupun dengan augmentasi. Metrik loss juga menunjukkan perbaikan signifikan setelah augmentasi dilakukan, dengan nilai loss awal sebesar 0.057 untuk data tanpa augmentasi, yang kemudian turun menjadi 0.041 setelah augmentasi diterapkan. Hal ini menunjukkan bahwa augmentasi data membantu model dalam memperbaiki prediksi dan generalisasi terhadap dataset. Meskipun saat ini metrik lain belum ditampilkan, hasil akurasi dan loss sudah memberikan gambaran awal bahwa model mampu melakukan segmentasi dengan performa yang cukup baik."
     }
   }
   

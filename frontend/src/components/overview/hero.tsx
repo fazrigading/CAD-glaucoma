@@ -6,15 +6,17 @@ function Hero() {
         </h1>
         
         <p className="w-2/3 text-paragraph">
-            Sistem mendapatkan dukungan dari Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi melalui Skema Penelitian Terapan 668/UN17.L1/HK/2024 dan 517/UN17.L1/HK/2025.
+            Sistem ini didukung oleh Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi melalui Skema Penelitian Terapan 668/UN17.L1/HK/2024 dan 517/UN17.L1/HK/2025.
         </p>
         <p className="text-subheading py-2">Tim Peneliti</p>
         <ul className="text-paragraph font-normal">
             <li>Prof. Dr. Ir. Anindita Septiarini, S.T., M.Cs., IPU.</li>
             <li>Prof. Dr. Ir. Hamdani, S.T., M.Cs., IPM.</li>
-            <li>dr. Nur Khoma Fatmawati, Sp.M</li >
+            <li>dr. Nur Khoma Fatmawati, Sp.M.</li >
             <li>Imam Muhammad Hakim, S.T., M.T.</li>
             <li>Fazri Rahmad Nor Gading, S.Kom.</li>
+            <li>Bugi Sulistyo, S.Kom.</li>
+            <li>Eko Rahmat Darmawan, S.Kom.</li>
         </ul>
         <a
             href="/model"
