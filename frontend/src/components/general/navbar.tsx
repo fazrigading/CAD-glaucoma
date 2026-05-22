@@ -1,8 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const Navbar = () => {
 
   const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
   let bd_overview = "";
   let bd_model = "";
   let bd_history = "";
@@ -34,6 +36,16 @@ const Navbar = () => {
             ) : (
               <></>
             )}
+
+            <button
+              onClick={toggleTheme}
+              className="fixed top-4 right-4 z-50 btn btn-circle btn-ghost btn-sm"
+              aria-label="Toggle theme"
+            >
+              <span className="material-symbols-outlined">
+                {theme === "light" ? "dark_mode" : "light_mode"}
+              </span>
+            </button>
         
         </div>
   );
