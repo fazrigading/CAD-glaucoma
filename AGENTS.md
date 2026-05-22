@@ -41,7 +41,7 @@ docker compose up -d --build
 ```
 
 ## Setup
-- **Backend venv**: `cd backend && python -m venv .venv-linux && source .venv-linux/bin/activate && pip install -r requirements.txt`
+- **Backend venv**: `cd backend && python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`
   - Requires Python 3.12+ (TensorFlow 2.21.0).
 - **Frontend**: `cd frontend && npm install`
 - **Database**: Import `database/cad_glaucoma_app.sql` into MySQL/MariaDB.

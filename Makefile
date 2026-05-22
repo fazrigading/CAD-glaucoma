@@ -4,10 +4,10 @@
 dev:
 	@echo "Starting frontend dev server..."
 	cd frontend && npm run dev & \
-	cd backend && source .venv-linux/bin/activate && flask run
+	cd backend && source .venv/bin/activate && flask run
 
 dev-backend:
-	cd backend && source .venv-linux/bin/activate && flask run
+	cd backend && source .venv/bin/activate && flask run
 
 dev-frontend:
 	cd frontend && npm run dev
@@ -25,7 +25,7 @@ build:
 
 # Setup
 setup:
-	cd backend && python3 -m venv .venv-linux && source .venv-linux/bin/activate && pip install -r requirements.txt
+	cd backend && python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
 	cd frontend && npm install
 
 # Clean

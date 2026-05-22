@@ -156,13 +156,13 @@ DB_PASSWORD=glaucoma_dev_password
 ```makefile
 # Replace flask run with uvicorn
 dev-backend:
-	cd backend && source .venv-linux/bin/activate && uvicorn app.main:app --reload --host 0.0.0.0 --port 5000
+	cd backend && source .venv/bin/activate && uvicorn app.main:app --reload --host 0.0.0.0 --port 5000
 
 # Optionally add uvicorn reload for development
 dev:
 	@echo "Starting frontend dev server..."
 	cd frontend && npm run dev & \
-	cd backend && source .venv-linux/bin/activate && uvicorn app.main:app --reload --host 0.0.0.0 --port 5000
+	cd backend && source .venv/bin/activate && uvicorn app.main:app --reload --host 0.0.0.0 --port 5000
 ```
 
 ---
