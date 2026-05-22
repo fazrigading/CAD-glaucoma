@@ -73,7 +73,8 @@ CAD-glaucoma/
 ### 1. Database Setup
 
 ```bash
-mysql -u root -p < database/cad_glaucoma_app.sql
+sudo mysql -u root -e "CREATE DATABASE glaucoma_db;"
+sudo mysql -u root glaucoma_db < database/cad_glaucoma_app.sql
 ```
 
 ### 2. Backend
