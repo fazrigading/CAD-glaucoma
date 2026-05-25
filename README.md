@@ -11,9 +11,9 @@ A Computer-Aided Detection (CAD) system for glaucoma diagnosis based on optic ne
 - **dr. Nur Khoma Fatmawati, Sp.M.** - Co-Investigator (Ophtalmologist, Project Partner from SMEC)
   - Formal Analysis, Supervision, Resources, Methodology, Validation 
 - **Imam Muhammad Hakim, S.T., M.T.** - Back-end Developer & AI Engineer
-   - Writing – Review & Editing, Data Curation, Methodology, Software, Investigation
+  - Writing – Review & Editing, Data Curation, Methodology, Software, Investigation
 - **Fazri Rahmad Nor Gading, S.Kom.** - Front-end Developer
-    - Writing – Review & Editing, Project Administration, Investigation, Software, Visualization
+  - Writing – Review & Editing, Project Administration, Investigation, Software, Visualization
 
 **Previous Developers:**
 - Bugi Sulistiyo, S.Kom.
