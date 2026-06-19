@@ -4,6 +4,12 @@ from asyncmy import Connection
 
 from app.config import settings
 from app.db import get_db
+from app.schemas.history import (
+    PredictionData,
+    HistoryListResponse,
+    HistoryDetailResponse,
+    HistoryDeleteResponse,
+)
 
 router = APIRouter(prefix="/api", tags=["history"])
 
@@ -130,3 +136,74 @@ async def delete_prediction(db: Connection, prediction_id: int) -> bool:
             return False
         await cursor.execute("DELETE FROM predict WHERE id = %s", (prediction_id,))
         return cursor.rowcount > 0
+
+
+# --- Route handlers ---
+
+
+@router.get("/history", response_model=HistoryListResponse)
+async def get_prediction_history(
+    page: int = 1,
+    per_page: int = 20,
+    db: Connection = Depends(get_db),
+):
+    per_page = min(per_page, 100)
+    predictions = await get_all_predictions(db)
+
+    total = len(predictions)
+    start = (page - 1) * per_page
+    end = start + per_page
+    paginated = predictions[start:end]
+
+    return HistoryListResponse(
+        success=True,
+        message="Data history berhasil diambil",
+        data=[PredictionData(**p) for p in paginated],
+        total=total,
+        page=page,
+        per_page=per_page,
+        total_pages=(total + per_page - 1) // per_page,
+    )
+
+
+@router.get("/history/{prediction_id}", response_model=HistoryDetailResponse)
+async def get_prediction_detail(
+    prediction_id: int,
+    db: Connection = Depends(get_db),
+):
+    prediction = await get_prediction_by_id(db, prediction_id)
+    if not prediction:
+        raise HTTPException(status_code=404, detail="Data prediksi tidak ditemukan")
+
+    return HistoryDetailResponse(
+        success=True,
+        message="Data prediksi berhasil diambil",
+        data=PredictionData(**prediction),
+    )
+
+
+@router.delete("/history/{prediction_id}", response_model=HistoryDeleteResponse)
+async def delete_prediction_data(
+    prediction_id: int,
+    db: Connection = Depends(get_db),
+):
+    prediction = await get_prediction_by_id(db, prediction_id)
+    if not prediction:
+        raise HTTPException(status_code=404, detail="Data tidak ditemukan")
+
+    success = await delete_prediction(db, prediction_id)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"Gagal menghapus data prediksi dengan ID {prediction_id}")
+
+    for path_key in ["raw_img_path", "mask_img_path", "annot_img_path"]:
+        file_path = prediction.get(path_key)
+        if file_path:
+            clean_path = file_path.replace("\\", "/")
+            full_path = settings.upload_folder / clean_path
+            if full_path.exists() and full_path.is_file():
+                full_path.unlink()
+
+    return HistoryDeleteResponse(
+        success=True,
+        message=f"Data prediksi dengan ID {prediction_id} berhasil dihapus",
+    )

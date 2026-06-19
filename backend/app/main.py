@@ -52,14 +52,13 @@ app.add_middleware(
 # --- Routers ---
 from app.routes.auth import router as auth_router
 from app.routes.upload import router as upload_router
+from app.routes.history import router as history_router
+from app.routes.polygon import router as polygon_router
 
 app.include_router(auth_router)
 app.include_router(upload_router)
+app.include_router(history_router)
+app.include_router(polygon_router)
 
-# from app.routes.history import router as history_router
-# from app.routes.polygon import router as polygon_router
 # from app.routes.health import router as health_router
-
-# app.include_router(history_router)
-# app.include_router(polygon_router)
 # app.include_router(health_router)
