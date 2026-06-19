@@ -1,44 +1,52 @@
-import os
-from flask import Blueprint, request, jsonify, send_from_directory, url_for, session, current_app
-from werkzeug.utils import secure_filename
+import asyncio
+from pathlib import Path
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, status
+from fastapi.responses import FileResponse
+from asyncmy import Connection
+
+from app.config import settings
+from app.db import get_db
+from app.auth import get_current_user
 from app.services.ml import ev_cdr
 from app.services.visualization import visualize_predict, draw_masking
 from app.services.storage import clean_temp_files
 from app.routes.history import save_prediction_to_db, update_image_paths
+from app.schemas.upload import UploadResponse
 
-upload_bp = Blueprint("upload", __name__)
+router = APIRouter(prefix="/api", tags=["upload"])
 
 
 def _allowed_file(filename: str) -> bool:
-    allowed = current_app.config["ALLOWED_IMAGE_EXTENSIONS"]
-    return os.path.splitext(filename)[1].lower() in allowed
+    return Path(filename).suffix.lower() in settings.allowed_image_extensions
 
 
-@upload_bp.route("/api/upload", methods=["POST"])
-def predict_image():
-    nama = request.form.get("nama")
-    umur = request.form.get("umur")
-    gender = request.form.get("gender")
-    posisi = request.form.get("posisi")
-    gambar = request.files.get("gambar")
-
-    if not gambar:
-        return jsonify({"error": "Tidak ada gambar yang diunggah"}), 400
-
+@router.post("/upload", response_model=UploadResponse)
+async def predict_image(
+    nama: str = Form(...),
+    umur: str = Form(...),
+    gender: str = Form(...),
+    posisi: str = Form(...),
+    gambar: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user),
+):
     if not _allowed_file(gambar.filename or ""):
-        return jsonify({"error": "Format file tidak didukung. Gunakan JPG atau PNG."}), 400
+        raise HTTPException(status_code=400, detail="Format file tidak didukung. Gunakan JPG atau PNG.")
 
-    clean_temp_files(current_app.config["RAW_FOLDER"])
+    await asyncio.to_thread(clean_temp_files, str(settings.raw_folder))
 
-    original_filename = secure_filename(gambar.filename)
-    file_extension = os.path.splitext(original_filename)[1].lower()
-
+    file_extension = Path(gambar.filename or "temp.jpg").suffix.lower()
     temp_filename = f"temp_raw{file_extension}"
-    temp_gambar_path = os.path.join(current_app.config["RAW_FOLDER"], temp_filename)
-    gambar.save(temp_gambar_path)
+    temp_gambar_path = settings.raw_folder / temp_filename
 
-    result = ev_cdr(temp_gambar_path, current_app.config["MODEL_PATH"])
-    diagnose = "Glaucoma" if result["vertical_cdr"] > current_app.config["CDR_THRESHOLD"] else "Non Glaucoma"
+    content = await gambar.read()
+    temp_gambar_path.write_bytes(content)
+
+    try:
+        result = await asyncio.to_thread(ev_cdr, str(temp_gambar_path), str(settings.model_path))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    diagnose = "Glaucoma" if result["vertical_cdr"] > settings.cdr_threshold else "Non Glaucoma"
 
     patient_data = {
         "name": nama,
@@ -47,9 +55,12 @@ def predict_image():
         "eyes": result["eye_side"],
     }
 
-    masking = visualize_predict(result["predict"], current_app.config["UPLOAD_FOLDER"])
-    temp_mask_path = os.path.join(current_app.config["UPLOAD_FOLDER"], masking)
-    draw_mask, new_mask = draw_masking(temp_gambar_path, temp_mask_path, current_app.config["UPLOAD_FOLDER"])
+    masking = await asyncio.to_thread(visualize_predict, result["predict"], str(settings.upload_folder))
+    temp_mask_path = settings.upload_folder / masking
+
+    draw_mask, new_mask = await asyncio.to_thread(
+        draw_masking, str(temp_gambar_path), str(temp_mask_path), str(settings.upload_folder)
+    )
 
     prediction_result = {
         "h_cdr": round(result["horizontal_cdr"], 2),
@@ -59,13 +70,15 @@ def predict_image():
     }
 
     temp_image_paths = {
-        "raw_img_path": temp_gambar_path,
-        "mask_img_path": temp_mask_path,
-        "annot_img_path": os.path.join(current_app.config["UPLOAD_FOLDER"], draw_mask),
+        "raw_img_path": str(temp_gambar_path),
+        "mask_img_path": str(temp_mask_path),
+        "annot_img_path": str(settings.upload_folder / draw_mask),
     }
 
-    doctor_id = session.get("user_id")
-    patient_id = save_prediction_to_db(patient_data, prediction_result, temp_image_paths, doctor_id)
+    doctor_id = int(current_user["sub"])
+
+    async with get_db() as db:
+        patient_id = await save_prediction_to_db(db, patient_data, prediction_result, temp_image_paths, doctor_id)
 
     if patient_id:
         final_raw_filename = f"{patient_id}_raw{file_extension}"
@@ -73,27 +86,32 @@ def predict_image():
         final_new_mask_filename = f"{patient_id}_new_mask.jpg"
         final_draw_mask_filename = f"{patient_id}_draw_mask.jpg"
 
-        final_raw_path = os.path.join(current_app.config["RAW_FOLDER"], final_raw_filename)
-        final_mask_path = os.path.join(current_app.config["MASK_FOLDER"], final_mask_filename)
-        final_new_mask_path = os.path.join(current_app.config["MASK_FOLDER"], final_new_mask_filename)
-        final_draw_mask_path = os.path.join(current_app.config["ANNOT_FOLDER"], final_draw_mask_filename)
+        final_raw_path = settings.raw_folder / final_raw_filename
+        final_mask_path = settings.mask_folder / final_mask_filename
+        final_new_mask_path = settings.mask_folder / final_new_mask_filename
+        final_draw_mask_path = settings.annot_folder / final_draw_mask_filename
 
-        for src, dst in [
+        move_pairs = [
             (temp_gambar_path, final_raw_path),
             (temp_mask_path, final_mask_path),
-            (os.path.join(current_app.config["UPLOAD_FOLDER"], new_mask), final_new_mask_path),
-            (os.path.join(current_app.config["UPLOAD_FOLDER"], draw_mask), final_draw_mask_path),
-        ]:
-            if os.path.exists(dst):
-                os.remove(dst)
-            os.rename(src, dst)
+            (settings.upload_folder / new_mask, final_new_mask_path),
+            (settings.upload_folder / draw_mask, final_draw_mask_path),
+        ]
+
+        for src, dst in move_pairs:
+            if dst.exists():
+                dst.unlink()
+            src.rename(dst)
 
         updated_image_paths = {
-            "raw_img_path": final_raw_path,
-            "mask_img_path": final_mask_path,
-            "annot_img_path": final_draw_mask_path,
+            "raw_img_path": str(final_raw_path),
+            "mask_img_path": str(final_mask_path),
+            "annot_img_path": str(final_draw_mask_path),
         }
-        update_image_paths(patient_id, updated_image_paths)
+
+        async with get_db() as db2:
+            await update_image_paths(db2, patient_id, updated_image_paths)
+
         db_save_success = True
     else:
         db_save_success = False
@@ -102,13 +120,13 @@ def predict_image():
         final_draw_mask_filename = draw_mask
 
     if patient_id:
-        gambar_url = url_for("upload.uploaded_image", filename=f"raw/{final_raw_filename}", _external=True)
-        mask_url = url_for("upload.uploaded_image", filename=f"mask/{final_new_mask_filename}", _external=True)
-        draw_mask_url = url_for("upload.uploaded_image", filename=f"annot/{final_draw_mask_filename}", _external=True)
+        gambar_url = f"/uploads/raw/{final_raw_filename}"
+        mask_url = f"/uploads/mask/{final_new_mask_filename}"
+        draw_mask_url = f"/uploads/annot/{final_draw_mask_filename}"
     else:
-        gambar_url = url_for("upload.uploaded_image", filename=f"raw/{final_raw_filename}", _external=True)
-        mask_url = url_for("upload.uploaded_image", filename=final_mask_filename, _external=True)
-        draw_mask_url = url_for("upload.uploaded_image", filename=final_draw_mask_filename, _external=True)
+        gambar_url = f"/uploads/raw/{final_raw_filename}"
+        mask_url = f"/uploads/{final_mask_filename}"
+        draw_mask_url = f"/uploads/{final_draw_mask_filename}"
 
     message = (
         f"Prediksi berhasil dan data tersimpan ke database dengan ID: {patient_id}"
@@ -116,35 +134,32 @@ def predict_image():
         else "Prediksi berhasil tetapi gagal menyimpan ke database"
     )
 
-    return jsonify({
-        "message": message,
-        "patient_id": patient_id if patient_id else None,
-        "nama": nama,
-        "umur": umur,
-        "gender": gender,
-        "posisi": result["eye_side"],
-        "gambar_url": gambar_url,
-        "mask_url": mask_url,
-        "draw_url": draw_mask_url,
-        "v_cdr": round(result["vertical_cdr"], 2),
-        "h_cdr": round(result["horizontal_cdr"], 2),
-        "area_cdr": round(result["area_cdr"], 2),
-        "diagnose": diagnose,
-        "db_saved": db_save_success,
-    }), 200
+    return UploadResponse(
+        message=message,
+        patient_id=patient_id,
+        nama=nama,
+        umur=umur,
+        gender=gender,
+        posisi=result["eye_side"],
+        gambar_url=gambar_url,
+        mask_url=mask_url,
+        draw_url=draw_mask_url,
+        v_cdr=round(result["vertical_cdr"], 2),
+        h_cdr=round(result["horizontal_cdr"], 2),
+        area_cdr=round(result["area_cdr"], 2),
+        diagnose=diagnose,
+        db_saved=db_save_success,
+    )
 
 
-@upload_bp.route("/uploads/<path:filename>")
-def uploaded_image(filename):
-    safe_path = os.path.normpath(filename)
-    if safe_path.startswith("..") or safe_path.startswith("/"):
-        return jsonify({"error": "Invalid path"}), 400
-    return send_from_directory(current_app.config["UPLOAD_FOLDER"], filename)
+@router.get("/uploads/{file_path:path}")
+async def serve_uploaded_file(file_path: str):
+    safe_path = Path(file_path)
+    if ".." in safe_path.parts:
+        raise HTTPException(status_code=400, detail="Invalid path")
 
+    full_path = settings.upload_folder / safe_path
+    if not full_path.exists() or not full_path.is_file():
+        raise HTTPException(status_code=404, detail="File not found")
 
-@upload_bp.route("/api/uploads/<path:filename>", methods=["GET"])
-def uploaded_image_api(filename):
-    safe_path = os.path.normpath(filename)
-    if safe_path.startswith("..") or safe_path.startswith("/"):
-        return jsonify({"error": "Invalid path"}), 400
-    return send_from_directory(current_app.config["UPLOAD_FOLDER"], filename)
+    return FileResponse(str(full_path))

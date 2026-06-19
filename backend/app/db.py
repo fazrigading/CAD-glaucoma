@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 import asyncmy
 from asyncmy.pool import Pool
 
@@ -27,8 +28,9 @@ async def close_db_pool():
         _pool = None
 
 
+@asynccontextmanager
 async def get_db():
-    """FastAPI dependency that yields an asyncmy connection."""
+    """Context manager / FastAPI dependency that yields an asyncmy connection."""
     if _pool is None:
         raise RuntimeError("Database pool not initialized")
     async with _pool.acquire() as conn:
