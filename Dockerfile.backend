@@ -13,9 +13,11 @@ COPY backend/ .
 
 RUN mkdir -p uploads/raw uploads/mask uploads/annot
 
-ENV FLASK_APP=run.py
-ENV FLASK_ENV=production
+# Copy frontend dist for SPA serving
+COPY frontend/dist /app/../frontend/dist
+
+ENV APP_ENV=production
 
 EXPOSE 5000
 
-CMD ["flask", "run", "--host=0.0.0.0"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5000"]

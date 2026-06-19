@@ -20,13 +20,12 @@ services:
       context: .
       dockerfile: Dockerfile.backend
     environment:
-      FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:-dev-secret-key}
-      FLASK_ENV: ${FLASK_ENV:-development}
+      APP_SECRET_KEY: ${APP_SECRET_KEY:-dev-secret-key}
+      APP_ENV: production
       DB_HOST: db
       DB_NAME: ${DB_NAME:-cad_glaucoma_app}
       DB_USER: root
       DB_PASSWORD: ${DB_PASSWORD:-glaucoma_dev_password}
-      SESSION_COOKIE_SECURE: "false"
     volumes:
       - upload_data:/app/uploads
     ports:
@@ -34,15 +33,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.frontend
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
 
 volumes:
   db_data:
