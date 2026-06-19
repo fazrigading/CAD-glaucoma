@@ -1,19 +1,21 @@
-from flask import Blueprint, jsonify
-from app.db import get_db_connection
+from fastapi import APIRouter, Depends
+from asyncmy import Connection
 
-health_bp = Blueprint("health", __name__)
+from app.db import get_db
+
+router = APIRouter(prefix="/api", tags=["health"])
 
 
-@health_bp.route("/api/health", methods=["GET"])
-def health_check():
-    status = {"status": "ok", "database": "unknown"}
+@router.get("/health")
+async def health_check():
+    return {"status": "ok", "framework": "fastapi"}
 
-    connection = get_db_connection()
-    if connection and connection.is_connected():
-        status["database"] = "connected"
-        connection.close()
-    else:
-        status["database"] = "disconnected"
-        status["status"] = "degraded"
 
-    return jsonify(status), 200 if status["status"] == "ok" else 503
+@router.get("/health/db")
+async def health_check_db(db: Connection = Depends(get_db)):
+    try:
+        async with db.cursor() as cursor:
+            await cursor.execute("SELECT 1")
+        return {"status": "ok", "database": "connected"}
+    except Exception:
+        return {"status": "degraded", "database": "disconnected"}

@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.db import init_db_pool, close_db_pool
@@ -54,11 +55,30 @@ from app.routes.auth import router as auth_router
 from app.routes.upload import router as upload_router
 from app.routes.history import router as history_router
 from app.routes.polygon import router as polygon_router
+from app.routes.health import router as health_router
 
 app.include_router(auth_router)
 app.include_router(upload_router)
 app.include_router(history_router)
 app.include_router(polygon_router)
+app.include_router(health_router)
 
-# from app.routes.health import router as health_router
-# app.include_router(health_router)
+
+# --- Static file mounts ---
+
+# Uploaded files (images, masks, annotations)
+app.mount(
+    "/uploads",
+    StaticFiles(directory=str(settings.upload_folder)),
+    name="uploads",
+)
+
+# SPA static files (production only — fallback for all unmatched routes)
+if settings.is_production:
+    frontend_dist = Path(__file__).parent.parent.parent / "frontend" / "dist"
+    if frontend_dist.exists():
+        app.mount(
+            "/",
+            StaticFiles(directory=str(frontend_dist), html=True),
+            name="spa",
+        )
