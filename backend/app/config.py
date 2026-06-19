@@ -1,38 +1,44 @@
-import os
+from pydantic_settings import BaseSettings
+from pathlib import Path
 
 
-class Config:
-    SECRET_KEY = os.getenv("FLASK_SECRET_KEY", "dev-secret-key-change-me")
-    DB_HOST = os.getenv("DB_HOST", "localhost")
-    DB_NAME = os.getenv("DB_NAME", "cad_glaucoma_app")
-    DB_USER = os.getenv("DB_USER", "root")
-    DB_PASSWORD = os.getenv("DB_PASSWORD", "")
+class Settings(BaseSettings):
+    app_secret_key: str = "dev-secret-key-change-me"
+    app_env: str = "development"
 
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
-    RAW_FOLDER = os.path.join(UPLOAD_FOLDER, "raw")
-    MASK_FOLDER = os.path.join(UPLOAD_FOLDER, "mask")
-    ANNOT_FOLDER = os.path.join(UPLOAD_FOLDER, "annot")
+    db_host: str = "localhost"
+    db_name: str = "cad_glaucoma_app"
+    db_user: str = "root"
+    db_password: str = ""
 
-    MODEL_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "model", "unet_model_aug.h5")
+    cdr_threshold: float = 0.5
+    allowed_image_extensions: set[str] = {".jpg", ".jpeg", ".png"}
 
-    SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_PATH = "/"
-    SESSION_COOKIE_SAMESITE = "Lax"
-    SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
-    SESSION_COOKIE_DOMAIN = None
+    @property
+    def upload_folder(self) -> Path:
+        return Path(__file__).parent.parent.parent / "uploads"
 
-    CDR_THRESHOLD = 0.5
+    @property
+    def raw_folder(self) -> Path:
+        return self.upload_folder / "raw"
 
-    ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
+    @property
+    def mask_folder(self) -> Path:
+        return self.upload_folder / "mask"
+
+    @property
+    def annot_folder(self) -> Path:
+        return self.upload_folder / "annot"
+
+    @property
+    def model_path(self) -> Path:
+        return Path(__file__).parent.parent.parent / "model" / "unet_model_aug.h5"
+
+    @property
+    def is_production(self) -> bool:
+        return self.app_env == "production"
+
+    model_config = {"env_file": ".env", "case_sensitive": False}
 
 
-class DevConfig(Config):
-    FLASK_ENV = "development"
-    DEBUG = True
-
-
-class ProdConfig(Config):
-    FLASK_ENV = "production"
-    DEBUG = False
-    SESSION_COOKIE_SECURE = True
-    SESSION_COOKIE_SAMESITE = "Lax"
+settings = Settings()
