@@ -41,3 +41,6 @@ npm-debug.log*
 
 # Model files (download from private release)
 backend/model/*.h5
+
+# Commandcode
+.commandcode/
