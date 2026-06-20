@@ -32,32 +32,36 @@ A Computer-Aided Detection (CAD) system for glaucoma diagnosis based on optic ne
 
 ```
 CAD-glaucoma/
-├── backend/                 # Flask API + ML inference
+├── backend/                 # FastAPI + ML inference
 │   ├── app/
-│   │   ├── __init__.py      # App factory (create_app)
-│   │   ├── config.py        # Dev/Prod configuration
-│   │   ├── db.py            # Database connection pool
-│   │   ├── extensions.py    # CORS setup
-│   │   ├── routes/          # API endpoints (auth, upload, history, polygon)
-│   │   └── services/        # Business logic (ML, visualization, storage)
+│   │   ├── main.py          # FastAPI app with lifespan, CORS, static mounts
+│   │   ├── config.py        # Pydantic Settings (APP_* env vars)
+│   │   ├── db.py            # Async DB connection pool (aiomysql)
+│   │   ├── auth.py          # Session auth helpers
+│   │   ├── routes/          # API endpoints (auth, upload, history, polygon, health)
+│   │   ├── schemas/         # Pydantic request/response models
+│   │   └── services/        # Business logic (ML inference, visualization, storage)
 │   ├── model/               # U-Net model weights (.h5)
 │   ├── uploads/             # Patient fundus images (runtime)
 │   ├── requirements.txt     # Python dependencies
-│   └── run.py               # Flask entry point
+│   └── run.py               # uvicorn entry point
 ├── frontend/                # React + TypeScript + Vite
 │   ├── src/
 │   │   ├── pages/           # Overview, Model, Correction, History, Login
 │   │   ├── components/      # Canvas annotation, forms, navbar
 │   │   └── hooks/           # Auth, state management
 │   └── vite.config.ts       # Dev server with /api proxy
-└── database/                # MySQL/MariaDB schema
+├── database/                # MySQL/MariaDB schema
+├── docker-compose.yml       # MariaDB + backend services
+├── Dockerfile.backend       # Production backend image
+└── Dockerfile.frontend      # Production frontend image
 ```
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|------------|
-| **Backend** | Flask 3.1, TensorFlow 2.21, MySQL/MariaDB |
+| **Backend** | FastAPI, TensorFlow 2.21, MySQL/MariaDB |
 | **Frontend** | React 19, TypeScript, Vite 6, TailwindCSS 4, DaisyUI |
 | **ML Model** | U-Net for optic disc/cup segmentation |
 | **Python** | 3.12+ |
@@ -81,15 +85,15 @@ sudo mysql -u root glaucoma_db < database/cad_glaucoma_app.sql
 
 ```bash
 cd backend
-python -m venv .venv 
+python -m venv .venv
 
-source .venv/bin/activate # Linux
-# Windows .venv\Scripts\activate
+source .venv/bin/activate  # Linux/macOS
+# Windows: .venv\Scripts\activate
 
 pip install -r requirements.txt
-cp .env.example .env   # Edit FLASK_SECRET_KEY
+cp .env.example .env   # Edit APP_SECRET_KEY
 
-flask run
+uvicorn app.main:app --reload --host 0.0.0.0 --port 5000
 ```
 
 Backend runs on `http://localhost:5000`.
@@ -122,7 +126,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contributor setup instructions, inclu
 | `/api/login` | POST | Doctor login |
 | `/api/logout` | POST | Doctor logout |
 | `/api/auth/check` | GET | Check authentication status |
-| `/uploads/<path>` | GET | Serve uploaded images |
+| `/api/health` | GET | Health check |
+| `/api/health/db` | GET | Database connectivity check |
+| `/uploads/{path}` | GET | Serve uploaded images |
 
 ### Frontend Pages
 
@@ -147,20 +153,47 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contributor setup instructions, inclu
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `FLASK_SECRET_KEY` | *(required)* | Session encryption key |
-| `FLASK_ENV` | `development` | `development` or `production` |
+| `APP_SECRET_KEY` | *(required)* | Session encryption key |
+| `APP_ENV` | `development` | `development` or `production` |
 | `DB_HOST` | `localhost` | Database host |
 | `DB_NAME` | `cad_glaucoma_app` | Database name |
 | `DB_USER` | `root` | Database user |
 | `DB_PASSWORD` | *(empty)* | Database password |
-| `SESSION_COOKIE_SECURE` | `false` | Set `true` in production with HTTPS |
 
 ## Security Notes
 
 - Passwords are stored as MD5 hashes (research project, not production-ready)
 - Session cookies use `HttpOnly` and `SameSite=Lax`
 - File uploads are validated for type (`.jpg`, `.jpeg`, `.png` only)
-- Path traversal protection on `/uploads/<path>` endpoints
+- Path traversal protection on `/uploads/{path}` endpoints
+
+## Docker
+
+```bash
+# Start all services (db, backend)
+docker compose up -d
+
+# Stop all services
+docker compose down
+
+# Rebuild and start
+docker compose up -d --build
+```
+
+Services: backend on `:5000`, db on `:3306`. In production the FastAPI backend also serves the frontend SPA from `frontend/dist/`.
+
+## Makefile
+
+```bash
+make setup        # Create venv + install backend/frontend deps
+make dev          # Start both dev servers (frontend + backend)
+make dev-backend  # Start backend only
+make dev-frontend # Start frontend only
+make build        # Build frontend for production
+make up           # docker compose up -d
+make down         # docker compose down
+make clean        # Remove build artifacts + __pycache__
+```
 
 
 ## License
