@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     @property
     def upload_folder(self) -> Path:
-        return Path(__file__).parent.parent.parent / "uploads"
+        return Path(__file__).parent.parent / "uploads"
 
     @property
     def raw_folder(self) -> Path:
@@ -32,7 +32,7 @@ class Settings(BaseSettings):
 
     @property
     def model_path(self) -> Path:
-        return Path(__file__).parent.parent.parent / "model" / "unet_model_aug.h5"
+        return Path(__file__).parent.parent / "model" / "unet_model_aug.h5"
 
     @property
     def is_production(self) -> bool:
