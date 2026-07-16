@@ -72,33 +72,74 @@ CAD-glaucoma/
 
 - Python 3.12+
 - Node.js 18+
-- MySQL or MariaDB
+- Docker & Docker Compose (for Docker setup)
+- MySQL or MariaDB (for manual setup)
 
-### 1. Database Setup
+### Option A: Docker (Recommended)
+
+Starts MariaDB and backend in containers. The database is auto-initialized from `database/cad_glaucoma_app.sql` on first run.
 
 ```bash
-sudo mysql -u root -e "CREATE DATABASE glaucoma_db;"
-sudo mysql -u root glaucoma_db < database/cad_glaucoma_app.sql
+# Start all services (db + backend)
+docker compose up -d
+
+# Stop all services
+docker compose down
+
+# Rebuild after code changes
+docker compose up -d --build
 ```
 
-### 2. Backend
+Services: backend on `:5000`, db on `:3306`.
+
+Then set up the frontend for development:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend runs on `http://localhost:5173` and proxies `/api` to the backend.
+
+> **Note:** When using Docker, set `DB_HOST=localhost` and `DB_PASSWORD=glaucoma_dev_password` in `backend/.env` (the DB port 3306 is exposed to localhost).
+
+### Option B: Manual Setup
+
+#### 1. Database
+
+```bash
+# Start MariaDB/MySQL
+sudo systemctl start mariadb   # Linux
+# brew services start mariadb  # macOS
+
+# Fix root auth (MariaDB uses unix_socket by default — apps can't connect with empty password)
+# Set a password for root (replace 'your_password' with your chosen password):
+sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'your_password'; FLUSH PRIVILEGES;"
+
+# Create database and import schema
+sudo mysql -u root -p -e "CREATE DATABASE cad_glaucoma_app;"
+sudo mysql -u root -p cad_glaucoma_app < database/cad_glaucoma_app.sql
+```
+
+#### 2. Backend
 
 ```bash
 cd backend
 python -m venv .venv
 
 source .venv/bin/activate  # Linux/macOS
-# Windows: .venv\Scripts\activate
+# .venv\Scripts\activate   # Windows
 
 pip install -r requirements.txt
-cp .env.example .env   # Edit APP_SECRET_KEY
+cp .env.example .env       # Edit APP_SECRET_KEY, DB_PASSWORD (must match the password set above)
 
-uvicorn app.main:app --reload --host 0.0.0.0 --port 5000
+uvicorn app.main:app --reload --port 5000
 ```
 
 Backend runs on `http://localhost:5000`.
 
-### 3. Frontend
+#### 3. Frontend
 
 ```bash
 cd frontend
@@ -151,14 +192,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contributor setup instructions, inclu
 
 ## Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `APP_SECRET_KEY` | *(required)* | Session encryption key |
-| `APP_ENV` | `development` | `development` or `production` |
-| `DB_HOST` | `localhost` | Database host |
-| `DB_NAME` | `cad_glaucoma_app` | Database name |
-| `DB_USER` | `root` | Database user |
-| `DB_PASSWORD` | *(empty)* | Database password |
+| Variable | Manual Default | Docker Default | Description |
+|----------|---------------|----------------|-------------|
+| `APP_SECRET_KEY` | *(required)* | *(required)* | Session encryption key |
+| `APP_ENV` | `development` | `production` | `development` or `production` |
+| `DB_HOST` | `localhost` | `localhost` | Database host (`db` inside compose) |
+| `DB_NAME` | `cad_glaucoma_app` | `cad_glaucoma_app` | Database name |
+| `DB_USER` | `root` | `root` | Database user |
+| `DB_PASSWORD` | *(empty)* | `glaucoma_dev_password` | Database password |
 
 ## Security Notes
 
@@ -170,17 +211,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for contributor setup instructions, inclu
 ## Docker
 
 ```bash
-# Start all services (db, backend)
-docker compose up -d
-
-# Stop all services
-docker compose down
-
-# Rebuild and start
-docker compose up -d --build
+docker compose up -d        # Start (db + backend)
+docker compose down         # Stop
+docker compose up -d --build  # Rebuild after code changes
 ```
 
 Services: backend on `:5000`, db on `:3306`. In production the FastAPI backend also serves the frontend SPA from `frontend/dist/`.
+
+> When connecting from the host (e.g., backend running locally against Docker DB), use `DB_HOST=localhost` and `DB_PASSWORD=glaucoma_dev_password`. Inside compose networking, the backend uses `DB_HOST=db`.
 
 ## Makefile
 
