@@ -80,6 +80,9 @@ CAD-glaucoma/
 Starts MariaDB and backend in containers. The database is auto-initialized from `database/cad_glaucoma_app.sql` on first run.
 
 ```bash
+# Start docker daemon (Linux)
+sudo systemctl start docker
+
 # Start all services (db + backend)
 docker compose up -d
 
